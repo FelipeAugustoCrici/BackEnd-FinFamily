@@ -6,9 +6,9 @@
     "strict": true,
     "outDir": "dist",
     "rootDir": ".",
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/*"]
     }
   },
   "include": ["src/**/*.ts", "api/**/*.ts"],
