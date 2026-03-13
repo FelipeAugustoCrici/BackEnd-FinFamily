@@ -10,8 +10,7 @@ export class RecordsController {
 
   async deleteRecord(req: FastifyRequest, reply: FastifyReply) {
     const { type, id } = req.params as DeleteRecordsParams
-    const userId = req.user.sub
-    await this.service.deleteRecord(type, id, userId)
+    await this.service.deleteRecord(type, id)
     return reply.status(204).send()
   }
 
