@@ -9,7 +9,10 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "api/**/*.ts"],
   "exclude": ["node_modules", "dist"]

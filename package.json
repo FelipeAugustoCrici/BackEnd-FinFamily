@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc && tsc-alias",
+    "build": "tsc && tsc-alias -p tsconfig.json --resolve-full-paths",
     "start": "node dist/server.js",
-    "vercel-build": "prisma generate && tsc && tsc-alias",
+    "vercel-build": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:prod": "prisma migrate deploy",
@@ -34,6 +34,7 @@
     "fastify-type-provider-zod": "^6.1.0",
     "lodash": "^4.17.23",
     "pg": "^8.18.0",
+    "tsx": "^4.21.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
