@@ -104,7 +104,9 @@ export class IncomesService {
         }
       }
 
-      const alreadyExists = source.incomes.some((i) => i.month === month && i.year === year)
+      const alreadyExists = source.incomes.some(
+        (i: { month: number; year: number }) => i.month === month && i.year === year,
+      )
 
       if (!alreadyExists) {
         await this.repository.createIncome({

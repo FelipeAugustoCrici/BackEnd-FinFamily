@@ -5,9 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc && tsc-alias -p tsconfig.json --resolve-full-paths",
+    "build": "tsup src/server.ts --format esm --outDir dist",
     "start": "node dist/server.js",
-    "vercel-build": "prisma generate && tsc && tsc-alias -p tsconfig.json --resolve-full-paths",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:prod": "prisma migrate deploy",
@@ -30,10 +29,11 @@
     "aws-jwt-verify": "^5.1.1",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
-    "fastify": "5.7.3",
+    "fastify": "5.8.1",
     "fastify-type-provider-zod": "^6.1.0",
     "lodash": "^4.17.23",
     "pg": "^8.18.0",
+    "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "zod": "^4.3.6"
   },

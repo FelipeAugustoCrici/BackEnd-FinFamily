@@ -21,7 +21,9 @@ export class RecurringExpensesService {
         if (endDate < targetDate) continue
       }
 
-      const alreadyExists = recurring.expenses.some((e) => e.month === month && e.year === year)
+      const alreadyExists = recurring.expenses.some(
+        (e: { month: number; year: number }) => e.month === month && e.year === year,
+      )
 
       if (!alreadyExists) {
         await this.expensesRepository.createExpense({
