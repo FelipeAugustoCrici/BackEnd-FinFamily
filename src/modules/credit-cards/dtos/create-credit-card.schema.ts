@@ -1,8 +1,13 @@
 import z from 'zod'
 
 export const createCreditCardSchema = z.object({
+  familyId: z.string().optional(),
+  ownerId: z.string().optional(),
   name: z.string().min(1),
-  limit: z.number().positive(),
+  bank: z.string().optional(),
+  brand: z.string().optional(),
+  color: z.string().optional(),
+  limitAmount: z.number().positive(),
   closingDay: z.number().int().min(1).max(31),
   dueDay: z.number().int().min(1).max(31),
 })

@@ -6,6 +6,7 @@ export class BudgetsRepository {
   async upsertBudget(data: {
     categoryName: string
     categoryId?: string
+    familyId?: string
     limitValue: number
     month: number
     year: number
@@ -21,14 +22,21 @@ export class BudgetsRepository {
       update: {
         limitValue: data.limitValue,
         categoryId: data.categoryId,
+        familyId: data.familyId,
       },
       create: data,
     })
   }
 
-  async listBudgets(month: number, year: number) {
+  async listBudgets(month: number, year: number, familyId?: string) {
     return this.prisma.findMany({
-      where: { month, year },
+      where: {
+        month,
+        year,
+        ...(familyId
+          ? { OR: [{ familyId }, { familyId: null }] }
+          : {}),
+      },
       include: { category: true },
     })
   }

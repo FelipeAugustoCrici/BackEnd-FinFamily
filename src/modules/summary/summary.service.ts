@@ -47,7 +47,7 @@ export class SummaryService {
       this.extrasService.getExtrasByFamily(familyId, month, year),
       this.incomesService.getIncomesByFamily(familyId, month, year),
       this.expensesService.getExpensesByFamily(familyId, month, year),
-      this.budgetsService.listBudgets(month, year),
+      this.budgetsService.listBudgets(month, year, familyId),
       this.salariesService.getSalariesByFamily(familyId, prevMonth, prevYear),
       this.extrasService.getExtrasByFamily(familyId, prevMonth, prevYear),
       this.incomesService.getIncomesByFamily(familyId, prevMonth, prevYear),
@@ -109,9 +109,9 @@ export class SummaryService {
 
     const budgetAlerts: Array<BudgetAlert> = budgets.map((b) => {
       const spent = expenses
-        .filter((e) => e.category === b.category)
+        .filter((e) => e.categoryName === b.categoryName || e.categoryId === b.categoryId)
         .reduce((acc, curr) => acc + curr.value, 0)
-      const percent = (spent / b.limitValue) * 100
+      const percent = b.limitValue > 0 ? (spent / b.limitValue) * 100 : 0
       return {
         category: b.category,
         limit: b.limitValue,

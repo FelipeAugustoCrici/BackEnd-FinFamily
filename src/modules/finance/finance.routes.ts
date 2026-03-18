@@ -8,6 +8,7 @@ import {
 import { ZodTypeProvider } from 'fastify-type-provider-zod'
 
 import { budgetsRoutes } from '@/modules/budgets/budgets.routes'
+import { calendarRoutes } from '@/modules/calendar/calendar.routes'
 import { categoriesRoutes } from '@/modules/categories/categories.routes'
 import { creditCardsRoutes } from '@/modules/credit-cards/credit-cards.routes'
 import { expensesRoutes } from '@/modules/expenses/expenses.routes'
@@ -30,6 +31,7 @@ type FastifyZodInstance = FastifyInstance<
 
 export async function financeRoutes(app: FastifyZodInstance) {
   app.register(budgetsRoutes, { prefix: '/budgets' })
+  app.register(calendarRoutes, { prefix: '/calendar' })
   app.register(categoriesRoutes, { prefix: '/categories' })
   app.register(creditCardsRoutes, { prefix: '/credit-cards' })
   app.register(expensesRoutes, { prefix: '/expenses' })

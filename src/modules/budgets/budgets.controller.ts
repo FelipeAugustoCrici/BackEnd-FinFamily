@@ -13,7 +13,8 @@ export class BudgetsController {
 
   async listBudgets(req: FastifyRequest, reply: FastifyReply) {
     const { month, year } = req.query as MonthYearQuery
-    const result = await this.service.listBudgets(month, year)
+    const { familyId } = req.query as { familyId?: string }
+    const result = await this.service.listBudgets(month, year, familyId)
     return reply.send(result)
   }
 

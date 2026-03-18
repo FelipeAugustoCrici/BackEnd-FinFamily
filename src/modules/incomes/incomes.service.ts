@@ -86,12 +86,15 @@ export class IncomesService {
 
   async processRecurringIncomes(familyId: string, month: number, year: number) {
     const sources = await this.repositoryIncomeSource.getIncomeSourcesByFamily(familyId)
-    const targetDate = new Date(year, month - 1, 1)
+    // targetDate usado apenas para comparação de endDate
+    const targetDate = new Date(Date.UTC(year, month - 1, 1))
 
     for (const source of sources) {
       const startDate = new Date(source.startDate)
-      const startMonth = startDate.getMonth() + 1
-      const startYear = startDate.getFullYear()
+      const startMonth = startDate.getUTCMonth() + 1
+      const startYear = startDate.getUTCFullYear()
+      // Preserva o dia original do cadastro
+      const originalDay = startDate.getUTCDate()
 
       if (year < startYear || (year === startYear && month < startMonth)) {
         continue
@@ -109,10 +112,15 @@ export class IncomesService {
       )
 
       if (!alreadyExists) {
+        // Garante que o dia não ultrapasse o último dia do mês
+        const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
+        const day = Math.min(originalDay, daysInMonth)
+        const recurringDate = new Date(Date.UTC(year, month - 1, day))
+
         await this.repository.createIncome({
           description: source.description,
           value: source.value,
-          date: targetDate,
+          date: recurringDate,
           month,
           year,
           type: source.type,

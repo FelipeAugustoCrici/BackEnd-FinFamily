@@ -8,8 +8,8 @@ export class BudgetsService {
     return this.repository.upsertBudget(data)
   }
 
-  async listBudgets(month: number, year: number) {
-    return this.repository.listBudgets(month, year)
+  async listBudgets(month: number, year: number, familyId?: string) {
+    return this.repository.listBudgets(month, year, familyId)
   }
 
   async getBudgetById(id: string) {
