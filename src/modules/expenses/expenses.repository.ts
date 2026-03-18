@@ -16,6 +16,7 @@ export class ExpensesRepository {
     personId: string
     status?: string
     recurringId?: string
+    isShared?: boolean
   }) {
     const { ...prismaData } = data
     return this.prisma.create({
@@ -50,6 +51,7 @@ export class ExpensesRepository {
       personId: string
       status?: string
       recurringId?: string
+      isShared?: boolean
     },
   ) {
     const updateData = _.pickBy(data, (v) => v !== undefined)

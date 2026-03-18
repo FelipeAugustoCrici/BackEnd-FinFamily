@@ -27,6 +27,7 @@ export class ExpensesService {
     isRecurring?: boolean
     durationMonths?: number
     userId: string
+    isShared?: boolean
   }) {
     // Validar se a pessoa pertence à família do usuário
     const isValid = await this.personsService.validatePersonBelongsToUserFamily(
@@ -71,6 +72,7 @@ export class ExpensesService {
         personId: data.personId,
         status: data.status,
         recurringId: recurring.id,
+        isShared: data.isShared ?? true,
       })
     }
 
@@ -85,6 +87,7 @@ export class ExpensesService {
       year,
       personId: data.personId,
       status: data.status,
+      isShared: data.isShared ?? true,
     })
   }
 
@@ -152,6 +155,7 @@ export class ExpensesService {
       year,
       personId: data.personId,
       status: data.status,
+      isShared: data.isShared,
     })
   }
 

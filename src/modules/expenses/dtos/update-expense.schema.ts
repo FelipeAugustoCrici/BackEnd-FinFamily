@@ -8,6 +8,7 @@ export const updateExpenseSchema = z.object({
   date: z.string(),
   personId: z.uuid(),
   status: z.enum(['PENDING', 'PAID', 'OVERDUE']).optional(),
+  isShared: z.boolean().optional(),
 })
 
 export type UpdateExpenseInput = z.infer<typeof updateExpenseSchema>

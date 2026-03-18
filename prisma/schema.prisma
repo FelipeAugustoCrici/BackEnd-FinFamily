@@ -153,6 +153,7 @@ model Expense {
   dt_deleted   DateTime?
   recurringId  String?
   recurring    RecurringExpense? @relation(fields: [recurringId], references: [id])
+  isShared     Boolean   @default(true)
 
   @@index([month, year])
   @@index([personId, month, year])
@@ -319,4 +320,31 @@ model CreditCardInstallment {
   @@index([invoiceId])
   @@index([referenceMonth, referenceYear])
   @@index([status])
+}
+
+model CoupleModeConfig {
+  id           String   @id @default(uuid())
+  familyId     String   @unique
+  isActive     Boolean  @default(true)
+  splitType    String   @default("equal") // equal | proportional | custom
+  participants Json     // [{ personId, proportion, income }]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([familyId])
+}
+
+model ExpenseAdjustment {
+  id          String   @id @default(uuid())
+  familyId    String
+  fromPersonId String
+  toPersonId  String
+  amount      Float
+  description String   @default("Ajuste de contas")
+  date        DateTime @default(now())
+  month       Int
+  year        Int
+  createdAt   DateTime @default(now())
+
+  @@index([familyId, month, year])
 }

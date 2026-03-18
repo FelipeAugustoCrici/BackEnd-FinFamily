@@ -7,6 +7,7 @@ import {
 } from 'fastify'
 import { ZodTypeProvider } from 'fastify-type-provider-zod'
 
+import { coupleModeRoutes } from '@/modules/couple-mode/couple-mode.routes'
 import { budgetsRoutes } from '@/modules/budgets/budgets.routes'
 import { calendarRoutes } from '@/modules/calendar/calendar.routes'
 import { categoriesRoutes } from '@/modules/categories/categories.routes'
@@ -43,4 +44,5 @@ export async function financeRoutes(app: FastifyZodInstance) {
   app.register(recordsRoutes, { prefix: '/' })
   app.register(salariesRoutes, { prefix: '/salaries' })
   app.register(summaryRoutes, { prefix: '/summary' })
+  app.register(coupleModeRoutes, { prefix: '/couple-mode' })
 }

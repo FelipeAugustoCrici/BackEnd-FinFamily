@@ -13,6 +13,7 @@ export const createExpenseSchema = z.object({
   creditCardId: z.string().optional(),
   isRecurring: z.boolean().optional(),
   durationMonths: z.number().int().min(0).optional(),
+  isShared: z.boolean().optional().default(true),
 })
 
 export type CreateExpenseInput = z.infer<typeof createExpenseSchema>
