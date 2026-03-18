@@ -7,6 +7,8 @@ export const createPersonSchema = z.object({
   email: z.email().optional(),
   cpf: z.string().optional(),
   birthDate: z.string().optional(),
+  hasAccess: z.boolean().optional().default(false),
+  temporaryPassword: z.string().optional(),
 })
 
 export type CreatePersonInput = z.infer<typeof createPersonSchema>

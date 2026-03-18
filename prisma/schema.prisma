@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,6 +17,9 @@ model Category {
   expenses  Expense[]
   budgets   Budget[]
   purchases CreditCardPurchase[]
+
+  @@index([familyId])
+  @@index([type])
 }
 
 model Family {
@@ -39,7 +39,8 @@ model Person {
   email         String?
   cpf           String?
   birthDate     DateTime?
-  userId        String? // Cognito sub
+  userId        String?
+  hasAccess     Boolean              @default(false)
   familyId      String
   family        Family               @relation(fields: [familyId], references: [id])
   salaries      Salary[]
@@ -53,13 +54,14 @@ model Person {
   createdAt     DateTime             @default(now())
 
   @@index([userId])
+  @@index([familyId])
 }
 
 model IncomeSource {
   id          String    @id @default(uuid())
   description String
   value       Float
-  type        String // 'fixed', 'variable', 'temporary'
+  type        String
   isRecurring Boolean   @default(true)
   startDate   DateTime
   endDate     DateTime?
@@ -69,6 +71,9 @@ model IncomeSource {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   incomes     Income[]
+
+  @@index([personId])
+  @@index([personId, active])
 }
 
 model Income {
@@ -78,7 +83,7 @@ model Income {
   date        DateTime
   month       Int
   year        Int
-  type        String // 'fixed', 'variable', 'temporary'
+  type        String
   personId    String
   person      Person        @relation(fields: [personId], references: [id])
   sourceId    String?
@@ -88,6 +93,9 @@ model Income {
   dt_deleted  DateTime?
 
   @@index([month, year])
+  @@index([personId, month, year])
+  @@index([personId, is_deleted])
+  @@index([sourceId])
 }
 
 model Salary {
@@ -103,6 +111,7 @@ model Salary {
   dt_deleted DateTime?
 
   @@unique([personId, month, year])
+  @@index([personId, is_deleted])
 }
 
 model ExtraIncome {
@@ -119,6 +128,8 @@ model ExtraIncome {
   dt_deleted  DateTime?
 
   @@index([month, year])
+  @@index([personId, month, year])
+  @@index([personId, is_deleted])
 }
 
 model Expense {
@@ -128,7 +139,7 @@ model Expense {
   categoryName String
   categoryId   String?
   category     Category? @relation(fields: [categoryId], references: [id])
-  type         String // 'fixed' | 'variable'
+  type         String
   date         DateTime
   month        Int
   year         Int
@@ -136,15 +147,20 @@ model Expense {
   creditCardId String?
   personId     String
   person       Person    @relation(fields: [personId], references: [id])
-  status       String    @default("PENDING") // 'PENDING' | 'PAID' | 'OVERDUE'
+  status       String    @default("PENDING")
   createdAt    DateTime  @default(now())
   is_deleted   Boolean   @default(false)
   dt_deleted   DateTime?
-
-  recurringId String?
-  recurring   RecurringExpense? @relation(fields: [recurringId], references: [id])
+  recurringId  String?
+  recurring    RecurringExpense? @relation(fields: [recurringId], references: [id])
 
   @@index([month, year])
+  @@index([personId, month, year])
+  @@index([personId, is_deleted])
+  @@index([categoryId])
+  @@index([status])
+  @@index([is_deleted, month, year])
+  @@index([creditCardId])
 }
 
 model RecurringExpense {
@@ -160,20 +176,27 @@ model RecurringExpense {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   expenses     Expense[]
+
+  @@index([personId])
+  @@index([personId, active])
 }
 
 model Goal {
   id            String             @id @default(uuid())
   description   String
-  type          String             @default("savings") // savings | debt | purchase | investment
+  type          String             @default("savings")
   targetValue   Float
   currentValue  Float              @default(0)
   deadline      DateTime?
   familyId      String?
   personId      String?
-  status        String             @default("active") // active | completed | archived
+  status        String             @default("active")
   createdAt     DateTime           @default(now())
   contributions GoalContribution[]
+
+  @@index([familyId])
+  @@index([familyId, status])
+  @@index([personId])
 }
 
 model GoalContribution {
@@ -184,6 +207,9 @@ model GoalContribution {
   date        DateTime @default(now())
   observation String?
   createdAt   DateTime @default(now())
+
+  @@index([goalId])
+  @@index([goalId, date])
 }
 
 model Budget {
@@ -198,6 +224,8 @@ model Budget {
   createdAt    DateTime  @default(now())
 
   @@unique([categoryName, month, year])
+  @@index([month, year])
+  @@index([familyId, month, year])
 }
 
 model CreditCard {
@@ -219,44 +247,57 @@ model CreditCard {
   updatedAt      DateTime              @updatedAt
   invoices       CreditCardInvoice[]
   purchases      CreditCardPurchase[]
+
+  @@index([familyId])
+  @@index([familyId, isActive])
+  @@index([ownerId])
 }
 
 model CreditCardInvoice {
-  id             String                    @id @default(uuid())
+  id             String                  @id @default(uuid())
   creditCardId   String
-  creditCard     CreditCard                @relation(fields: [creditCardId], references: [id])
+  creditCard     CreditCard              @relation(fields: [creditCardId], references: [id])
   referenceMonth Int
   referenceYear  Int
   closingDate    DateTime
   dueDate        DateTime
-  totalAmount    Float                     @default(0)
-  paidAmount     Float                     @default(0)
-  status         String                    @default("open") // open | closed | paid | overdue
-  createdAt      DateTime                  @default(now())
-  updatedAt      DateTime                  @updatedAt
+  totalAmount    Float                   @default(0)
+  paidAmount     Float                   @default(0)
+  status         String                  @default("open")
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
   installments   CreditCardInstallment[]
 
   @@unique([creditCardId, referenceMonth, referenceYear])
+  @@index([creditCardId])
+  @@index([creditCardId, referenceMonth, referenceYear])
+  @@index([status])
+  @@index([dueDate])
 }
 
 model CreditCardPurchase {
-  id           String                    @id @default(uuid())
+  id           String                  @id @default(uuid())
   creditCardId String
-  creditCard   CreditCard                @relation(fields: [creditCardId], references: [id])
+  creditCard   CreditCard              @relation(fields: [creditCardId], references: [id])
   familyId     String?
-  family       Family?                   @relation(fields: [familyId], references: [id])
+  family       Family?                 @relation(fields: [familyId], references: [id])
   ownerId      String?
-  owner        Person?                   @relation(fields: [ownerId], references: [id])
+  owner        Person?                 @relation(fields: [ownerId], references: [id])
   categoryId   String?
-  category     Category?                 @relation(fields: [categoryId], references: [id])
+  category     Category?               @relation(fields: [categoryId], references: [id])
   description  String
   purchaseDate DateTime
   totalAmount  Float
-  installments Int                       @default(1)
+  installments Int                     @default(1)
   observation  String?
-  createdAt    DateTime                  @default(now())
-  updatedAt    DateTime                  @updatedAt
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
   parcels      CreditCardInstallment[]
+
+  @@index([creditCardId])
+  @@index([familyId])
+  @@index([ownerId])
+  @@index([purchaseDate])
 }
 
 model CreditCardInstallment {
@@ -270,7 +311,12 @@ model CreditCardInstallment {
   amount            Float
   referenceMonth    Int
   referenceYear     Int
-  status            String             @default("pending") // pending | paid
+  status            String             @default("pending")
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+
+  @@index([purchaseId])
+  @@index([invoiceId])
+  @@index([referenceMonth, referenceYear])
+  @@index([status])
 }

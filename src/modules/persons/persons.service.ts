@@ -1,12 +1,34 @@
 import { PersonsRepository } from './persons.repository'
 import { UpdatePersonInput } from '@/modules/persons/dtos/update-person.schema'
 import { CreatePersonInput, CreatePersonData } from './dtos/create-person.schema'
+import { cognitoService } from '@/shared/cognito/cognito.service'
 
 export class PersonsService {
   private repository: PersonsRepository = new PersonsRepository()
 
   async createPerson(data: CreatePersonData) {
-    return this.repository.createPerson(data)
+    const { hasAccess, temporaryPassword, ...personData } = data as any
+
+    if (hasAccess) {
+      if (!personData.email) {
+        throw new Error('E-mail é obrigatório para conceder acesso à plataforma')
+      }
+
+      const exists = await cognitoService.userExists(personData.email)
+      if (exists) {
+        throw new Error('Já existe um usuário com este e-mail no sistema')
+      }
+
+      const cognitoSub = await cognitoService.createUser({
+        email: personData.email,
+        name: personData.name,
+        temporaryPassword: temporaryPassword || undefined,
+      })
+
+      return this.repository.createPerson({ ...personData, userId: cognitoSub, hasAccess: true })
+    }
+
+    return this.repository.createPerson(personData)
   }
 
   async getPerson(id: string, userId: string) {
@@ -26,21 +48,12 @@ export class PersonsService {
   }
 
   async validatePersonBelongsToUserFamily(personId: string, userId: string): Promise<boolean> {
-    // Buscar a pessoa com sua família
     const person = await this.repository.getPersonWithFamily(personId)
-    
-    if (!person || !person.familyId) {
-      return false
-    }
+    if (!person || !person.familyId) return false
 
-    // Buscar a pessoa do usuário logado para pegar sua família
     const userPerson = await this.repository.getPersonByUserId(userId)
-    
-    if (!userPerson || !userPerson.familyId) {
-      return false
-    }
+    if (!userPerson || !userPerson.familyId) return false
 
-    // Verificar se ambos pertencem à mesma família
     return person.familyId === userPerson.familyId
   }
 
