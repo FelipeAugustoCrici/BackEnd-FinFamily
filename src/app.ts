@@ -21,11 +21,14 @@ app.register(cors, {
 })
 
 app.addHook('onRequest', async (req, reply) => {
+  console.log(`[APP] ${req.method} ${req.url}`)
+
   if (req.method === 'POST' && req.url === '/finance/families') {
     return
   }
 
-  if (req.method === 'POST' && req.url === '/telegram/webhook') {
+  if (req.method === 'POST' && req.url.startsWith('/telegram/webhook')) {
+    console.log('[APP] Webhook request — pulando auth')
     return
   }
 
