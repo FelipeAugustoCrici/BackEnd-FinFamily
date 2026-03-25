@@ -6,25 +6,35 @@ export class TelegramController {
   private service = new TelegramService()
 
   async webhook(req: FastifyRequest, reply: FastifyReply) {
+    console.log('[TELEGRAM] ✅ Webhook hit')
+    console.log('[TELEGRAM] Headers:', JSON.stringify(req.headers, null, 2))
+    console.log('[TELEGRAM] Body:', JSON.stringify(req.body, null, 2))
+
     const secret = process.env.TELEGRAM_WEBHOOK_SECRET
+    console.log('[TELEGRAM] TELEGRAM_WEBHOOK_SECRET configurado:', !!secret)
+    console.log('[TELEGRAM] TELEGRAM_BOT_TOKEN configurado:', !!process.env.TELEGRAM_BOT_TOKEN)
 
     if (secret) {
       const incoming = req.headers['x-telegram-bot-api-secret-token']
+      console.log('[TELEGRAM] Secret recebido:', incoming)
+      console.log('[TELEGRAM] Secret esperado:', secret)
       if (incoming !== secret) {
-        req.log.warn({ incoming }, 'Telegram webhook: secret inválido')
+        console.log('[TELEGRAM] ❌ Secret inválido — retornando 403')
         return reply.status(403).send({ message: 'Forbidden' })
       }
     }
 
     const update = req.body as TelegramUpdate
-    req.log.info({ update_id: update.update_id }, 'Telegram update recebido')
+    console.log('[TELEGRAM] update_id:', update?.update_id)
 
     reply.status(200).send({ ok: true })
+    console.log('[TELEGRAM] ✅ 200 enviado ao Telegram')
 
     try {
       await this.service.handleUpdate(update)
+      console.log('[TELEGRAM] ✅ handleUpdate concluído')
     } catch (err) {
-      req.log.error(err, 'Erro ao processar update do Telegram')
+      console.error('[TELEGRAM] ❌ Erro no handleUpdate:', err)
     }
   }
 

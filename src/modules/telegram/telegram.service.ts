@@ -36,16 +36,23 @@ export class TelegramService {
   }
 
   async handleUpdate(update: TelegramUpdate): Promise<void> {
+    console.log('[TELEGRAM SERVICE] handleUpdate chamado')
+
     if (update.callback_query) {
+      console.log('[TELEGRAM SERVICE] callback_query detectado')
       await this.handleCallbackQuery(update.callback_query)
       return
     }
 
-    if (!update.message?.text) return
+    if (!update.message?.text) {
+      console.log('[TELEGRAM SERVICE] Sem message.text — ignorando')
+      return
+    }
 
     const { text, chat, from } = update.message
     const chatId = String(chat.id)
     const telegramUserId = String(from?.id ?? '')
+    console.log('[TELEGRAM SERVICE] chatId:', chatId, '| telegramUserId:', telegramUserId, '| text:', text)
 
     if (text.startsWith('/start')) {
       await this.handleStart(text, chatId, telegramUserId, from?.username)
