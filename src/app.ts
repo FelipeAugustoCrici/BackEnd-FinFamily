@@ -46,6 +46,7 @@ app.register(financeRoutes, { prefix: '/finance' })
 app.register(telegramRoutes, { prefix: '/telegram' })
 
 app.get('/', async (_, reply) => reply.send({ status: 'ok' }))
+app.get('/health', async (_, reply) => reply.send({ status: 'ok' }))
 
 app.get('/telegram/test', async (_, reply) => {
   console.log('[TEST] rota de teste chamada em:', new Date().toISOString())
