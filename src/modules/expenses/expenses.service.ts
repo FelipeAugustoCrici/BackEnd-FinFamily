@@ -173,6 +173,114 @@ export class ExpensesService {
     return this.repository.updateStatus(id, status)
   }
 
+  async addPayment(expenseId: string, data: {
+    amount: number
+    paidAt?: string
+    note?: string
+    transferToNextMonth?: boolean
+  }, userId: string) {
+    const expense = await this.repository.getExpenseByIdRaw(expenseId)
+    if (!expense) throw new Error('Despesa não encontrada')
+
+    const remaining = expense.value - expense.paidAmount
+    if (data.amount <= 0) throw new Error('O valor do pagamento deve ser maior que zero')
+    if (data.amount > remaining + 0.001) {
+      throw new Error(`Valor informado (${data.amount}) excede o saldo pendente (${remaining.toFixed(2)})`)
+    }
+
+    const newPaidAmount = parseFloat((expense.paidAmount + data.amount).toFixed(2))
+    const remainingAfter = parseFloat((expense.value - newPaidAmount).toFixed(2))
+    const isFullyPaid = remainingAfter <= 0.001
+
+    // Determine next month/year for transfer
+    const nextMonth = expense.month === 12 ? 1 : expense.month + 1
+    const nextYear = expense.month === 12 ? expense.year + 1 : expense.year
+    const nextDate = new Date(nextYear, nextMonth - 1, 1)
+    const nextDateISO = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`
+
+    const noteText = data.transferToNextMonth && !isFullyPaid
+      ? `${data.note ? data.note + ' · ' : ''}Pagamento parcial: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.amount)} · Saldo ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(remainingAfter)} transferido para ${String(nextMonth).padStart(2, '0')}/${nextYear}`
+      : data.note
+
+    // Register payment record
+    await this.repository.addPayment(expenseId, {
+      amount: data.amount,
+      paidAt: data.paidAt ? new Date(data.paidAt) : new Date(),
+      note: noteText,
+      remainingAfter: Math.max(0, remainingAfter),
+    })
+
+    if (data.transferToNextMonth && !isFullyPaid) {
+      // Close current expense: mark as PAID with the amount effectively paid
+      await this.repository.updatePaidAmount(expenseId, expense.value, 'PAID')
+      await this.repository.updateExpense(expenseId, {
+        description: expense.description,
+        value: newPaidAmount,
+        categoryName: expense.categoryName,
+        categoryId: expense.categoryId ?? undefined,
+        date: expense.date,
+        month: expense.month,
+        year: expense.year,
+        personId: expense.personId,
+        status: 'PAID',
+        recurringId: expense.recurringId ?? undefined,
+        isShared: expense.isShared,
+      })
+
+      // Create new expense for next month with remaining balance
+      await this.repository.createExpense({
+        description: expense.description,
+        value: remainingAfter,
+        categoryName: expense.categoryName,
+        categoryId: expense.categoryId ?? undefined,
+        type: expense.type,
+        date: nextDate,
+        month: nextMonth,
+        year: nextYear,
+        personId: expense.personId,
+        status: 'PENDING',
+        recurringId: expense.recurringId ?? undefined,
+        isShared: expense.isShared,
+        originExpenseId: expenseId,
+        originMonth: expense.month,
+        originYear: expense.year,
+      })
+    } else {
+      const newStatus = isFullyPaid ? 'PAID' : 'PARTIALLY_PAID'
+      await this.repository.updatePaidAmount(expenseId, newPaidAmount, newStatus)
+    }
+
+    return this.repository.getExpenseByIdRaw(expenseId)
+  }
+
+  async getPayments(expenseId: string) {
+    return this.repository.getPayments(expenseId)
+  }
+
+  async deletePayment(paymentId: string, expenseId: string) {
+    const expense = await this.repository.getExpenseByIdRaw(expenseId)
+    if (!expense) throw new Error('Despesa não encontrada')
+
+    const payment = expense.payments.find((p: any) => p.id === paymentId)
+    if (!payment) throw new Error('Pagamento não encontrado')
+
+    await this.repository.deletePayment(paymentId)
+
+    // Recalculate paidAmount from remaining payments
+    const remainingPayments = expense.payments.filter((p: any) => p.id !== paymentId)
+    const newPaidAmount = parseFloat(
+      remainingPayments.reduce((sum: number, p: any) => sum + p.amount, 0).toFixed(2)
+    )
+    const remainingBalance = parseFloat((expense.value - newPaidAmount).toFixed(2))
+    const newStatus = newPaidAmount <= 0 ? 'PENDING'
+      : remainingBalance <= 0.001 ? 'PAID'
+      : 'PARTIALLY_PAID'
+
+    await this.repository.updatePaidAmount(expenseId, newPaidAmount, newStatus)
+
+    return this.repository.getExpenseByIdRaw(expenseId)
+  }
+
   async deleteExpense(id: string) {
     return this.repository.deleteExpense(id)
   }

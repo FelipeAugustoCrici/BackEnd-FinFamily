@@ -12,8 +12,10 @@ import {
   listExpensesQuerySchema,
   patchExpenseStatusSchema,
   updateExpenseSchema,
+  createPaymentSchema,
 } from '@/modules/expenses/dtos'
 import { paramIdSchema } from '@/shared/schemas/param-id.schema'
+import z from 'zod'
 
 type FastifyZodInstance = FastifyInstance<
   RawServerDefault,
@@ -22,6 +24,8 @@ type FastifyZodInstance = FastifyInstance<
   FastifyBaseLogger,
   ZodTypeProvider
 >
+
+const paymentParamSchema = z.object({ id: z.string().uuid(), paymentId: z.string().uuid() })
 
 export async function expensesRoutes(app: FastifyZodInstance) {
   const controller: ExpensesController = new ExpensesController()
@@ -45,6 +49,21 @@ export async function expensesRoutes(app: FastifyZodInstance) {
     '/:id/status',
     { schema: { body: patchExpenseStatusSchema, params: paramIdSchema } },
     (req, reply) => controller.updateStatus(req, reply),
+  )
+
+  // Partial payments
+  app.post(
+    '/:id/payments',
+    { schema: { body: createPaymentSchema, params: paramIdSchema } },
+    (req, reply) => controller.addPayment(req, reply),
+  )
+
+  app.get('/:id/payments', { schema: { params: paramIdSchema } }, (req, reply) =>
+    controller.getPayments(req, reply),
+  )
+
+  app.delete('/:id/payments/:paymentId', { schema: { params: paymentParamSchema } }, (req, reply) =>
+    controller.deletePayment(req, reply),
   )
 
   app.delete('/:id', { schema: { params: paramIdSchema } }, (req, reply) => {

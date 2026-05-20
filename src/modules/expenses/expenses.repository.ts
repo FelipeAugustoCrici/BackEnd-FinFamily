@@ -17,6 +17,9 @@ export class ExpensesRepository {
     status?: string
     recurringId?: string
     isShared?: boolean
+    originExpenseId?: string
+    originMonth?: number
+    originYear?: number
   }) {
     const { ...prismaData } = data
     return this.prisma.create({
@@ -225,6 +228,50 @@ export class ExpensesRepository {
     return this.prisma.update({
       where: { id },
       data: { status },
+    })
+  }
+
+  async addPayment(expenseId: string, data: {
+    amount: number
+    paidAt?: Date
+    note?: string
+    remainingAfter: number
+  }) {
+    return prisma.expensePayment.create({
+      data: {
+        expenseId,
+        amount: data.amount,
+        paidAt: data.paidAt ?? new Date(),
+        note: data.note,
+        remainingAfter: data.remainingAfter,
+      },
+    })
+  }
+
+  async getPayments(expenseId: string) {
+    return prisma.expensePayment.findMany({
+      where: { expenseId },
+      orderBy: { paidAt: 'asc' },
+    })
+  }
+
+  async deletePayment(paymentId: string) {
+    return prisma.expensePayment.delete({
+      where: { id: paymentId },
+    })
+  }
+
+  async updatePaidAmount(id: string, paidAmount: number, status: string) {
+    return this.prisma.update({
+      where: { id },
+      data: { paidAmount, status },
+    })
+  }
+
+  async getExpenseByIdRaw(id: string) {
+    return this.prisma.findUnique({
+      where: { id },
+      include: { payments: { orderBy: { paidAt: 'asc' } }, category: true, person: true },
     })
   }
 }

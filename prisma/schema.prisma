@@ -133,27 +133,33 @@ model ExtraIncome {
 }
 
 model Expense {
-  id           String    @id @default(uuid())
-  description  String
-  value        Float
-  categoryName String
-  categoryId   String?
-  category     Category? @relation(fields: [categoryId], references: [id])
-  type         String
-  date         DateTime
-  month        Int
-  year         Int
-  isCreditCard Boolean   @default(false)
-  creditCardId String?
-  personId     String
-  person       Person    @relation(fields: [personId], references: [id])
-  status       String    @default("PENDING")
-  createdAt    DateTime  @default(now())
-  is_deleted   Boolean   @default(false)
-  dt_deleted   DateTime?
-  recurringId  String?
-  recurring    RecurringExpense? @relation(fields: [recurringId], references: [id])
-  isShared     Boolean   @default(true)
+  id              String    @id @default(uuid())
+  description     String
+  value           Float
+  categoryName    String
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id])
+  type            String
+  date            DateTime
+  month           Int
+  year            Int
+  isCreditCard    Boolean   @default(false)
+  creditCardId    String?
+  personId        String
+  person          Person    @relation(fields: [personId], references: [id])
+  status          String    @default("PENDING")
+  paidAmount      Float     @default(0)
+  originExpenseId String?
+  originMonth     Int?
+  originYear      Int?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  is_deleted      Boolean   @default(false)
+  dt_deleted      DateTime?
+  recurringId     String?
+  recurring       RecurringExpense? @relation(fields: [recurringId], references: [id])
+  isShared        Boolean   @default(true)
+  payments        ExpensePayment[]
 
   @@index([month, year])
   @@index([personId, month, year])
@@ -162,6 +168,21 @@ model Expense {
   @@index([status])
   @@index([is_deleted, month, year])
   @@index([creditCardId])
+  @@index([originExpenseId])
+}
+
+model ExpensePayment {
+  id            String   @id @default(uuid())
+  expenseId     String
+  expense       Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  amount        Float
+  paidAt        DateTime @default(now())
+  note          String?
+  remainingAfter Float
+  createdAt     DateTime @default(now())
+
+  @@index([expenseId])
+  @@index([expenseId, paidAt])
 }
 
 model RecurringExpense {

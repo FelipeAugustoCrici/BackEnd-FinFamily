@@ -2,6 +2,7 @@ import { ExpensesService } from './expenses.service'
 import { FastifyReply, FastifyRequest } from 'fastify'
 import {
   CreateExpenseInput,
+  CreatePaymentInput,
   ListExpensesQuery,
   PatchExpenseStatusInput,
   UpdateExpenseInput,
@@ -47,6 +48,31 @@ export class ExpensesController {
     const { id } = req.params as ParamIdInput
     const { status } = req.body as PatchExpenseStatusInput
     const result = await this.service.updateStatus(id, status)
+    return reply.send(result)
+  }
+
+  async addPayment(req: FastifyRequest, reply: FastifyReply) {
+    const userId = req.user.sub
+    const { id } = req.params as ParamIdInput
+    const body = req.body as CreatePaymentInput
+    const result = await this.service.addPayment(id, {
+      amount: body.amount,
+      paidAt: body.paidAt,
+      note: body.note,
+      transferToNextMonth: body.transferToNextMonth,
+    }, userId)
+    return reply.status(201).send(result)
+  }
+
+  async getPayments(req: FastifyRequest, reply: FastifyReply) {
+    const { id } = req.params as ParamIdInput
+    const result = await this.service.getPayments(id)
+    return reply.send(result)
+  }
+
+  async deletePayment(req: FastifyRequest, reply: FastifyReply) {
+    const { id, paymentId } = req.params as { id: string; paymentId: string }
+    const result = await this.service.deletePayment(paymentId, id)
     return reply.send(result)
   }
 
