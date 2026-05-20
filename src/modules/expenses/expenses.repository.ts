@@ -28,10 +28,21 @@ export class ExpensesRepository {
   }
 
   async getExpenseById(id: string, userId: string) {
-    return this.prisma.findUnique({
-      where: { id, person: { userId } },
-      include: { recurring: true, category: true, person: { include: { family: true } } },
+    // First try to find by direct ownership
+    const expense = await this.prisma.findUnique({
+      where: { id },
+      include: { recurring: true, category: true, person: { include: { family: { include: { members: true } } } } },
     })
+
+    if (!expense) return null
+
+    // Allow access if: user owns the person OR the person belongs to the same family as the user
+    const isOwner = expense.person.userId === userId
+    const isFamilyMember = expense.person.family?.members?.some(m => m.userId === userId)
+
+    if (!isOwner && !isFamilyMember) return null
+
+    return expense
   }
 
   async deleteExpense(id: string) {
