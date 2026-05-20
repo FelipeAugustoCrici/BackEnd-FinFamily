@@ -42,4 +42,15 @@ export async function categoriesRoutes(app: FastifyZodInstance) {
   app.delete('/:id', { schema: { params: paramIdSchema } }, (req, reply) =>
     controller.deleteCategory(req, reply),
   )
+
+  app.put(
+    '/:id',
+    {
+      schema: {
+        params: paramIdSchema,
+        body: z.object({ name: z.string().min(1) }),
+      },
+    },
+    (req, reply) => controller.updateCategory(req, reply),
+  )
 }

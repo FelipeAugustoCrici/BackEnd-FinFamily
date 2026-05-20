@@ -29,6 +29,13 @@ export class CategoriesRepository {
       where: { id },
     })
   }
+
+  async updateCategory(id: string, data: { name: string }) {
+    return prisma.category.update({
+      where: { id },
+      data,
+    })
+  }
 }
 
 export const categoriesRepository = new CategoriesRepository()

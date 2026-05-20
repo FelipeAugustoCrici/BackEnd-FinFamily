@@ -14,4 +14,8 @@ export class CategoriesService {
   async deleteCategory(id: string) {
     return this.repository.deleteCategory(id)
   }
+
+  async updateCategory(id: string, data: { name: string }) {
+    return this.repository.updateCategory(id, data)
+  }
 }

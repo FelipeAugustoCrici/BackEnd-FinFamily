@@ -27,6 +27,13 @@ export class CategoriesController {
     return reply.send(result)
   }
 
+  async updateCategory(req: FastifyRequest, reply: FastifyReply) {
+    const { id } = req.params as ParamIdInput
+    const { name } = req.body as { name: string }
+    const result = await this.service.updateCategory(id, { name })
+    return reply.send(result)
+  }
+
   async deleteCategory(req: FastifyRequest, reply: FastifyReply) {
     const { id } = req.params as ParamIdInput
     await this.service.deleteCategory(id)
